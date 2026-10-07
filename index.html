@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Study Prompt Builder</title>
-<meta name="description" content="Build a ready-to-copy request for an AI assistant that makes flashcards, practice questions, or a study schedule from your own class notes.">
+<meta name="description" content="Build a ready-to-copy request for an AI assistant that helps you understand your coursework, make flashcards and practice questions, or plan your studying.">
 <style>
 :root{--forest:#013220;--gold:#C6A15B;--warm:#7B7B7B;--ivory:#F8F5E9;--char:#333333;--sage:#A3B18A;--coral:#D97A6A;--sky:#89B6A5;--sage-tint:#E4EADA;--coral-tint:#F7E0DB;--sky-tint:#DCEBE5;--white:#FFFFFF}
 *{box-sizing:border-box}
@@ -86,7 +86,7 @@ th{background:var(--forest);color:var(--ivory)}
 <header class="band">
   <div class="wrap">
     <h1>Study Prompt Builder</h1>
-    <p>Build a ready-to-copy request for an AI assistant that makes study tools from your own class notes.</p>
+    <p>Build a ready-to-copy request for an AI assistant to help you study and understand your coursework.</p>
   </div>
 </header>
 <main id="main" tabindex="-1">
@@ -99,7 +99,7 @@ th{background:var(--forest);color:var(--ivory)}
     <form id="form" novalidate>
       <fieldset>
         <legend>What do you want to make?</legend>
-        <div class="opts" id="types"></div>
+        <div id="types"></div>
       </fieldset>
       <div class="card" id="detailsCard" hidden>
         <h3 style="margin-top:0">A few details</h3>
@@ -130,12 +130,33 @@ th{background:var(--forest);color:var(--ivory)}
         <li>Replace the words in [square brackets]. Paste your own class notes where the prompt asks for them, or attach your notes if your assistant lets you.</li>
         <li>Send it, then answer the questions without looking at your notes.</li>
       </ol>
-      <h3>Before you send</h3>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Then try asking this next</h3>
+      <p class="hint">The best learning often comes from the second question. After the first answer, you can copy one of these.</p>
+      <ul class="plain" id="followups" style="list-style:none;padding-left:0"></ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">Before you send</h3>
+      <p><strong>Ask yourself: If I use AI for this, am I learning what my instructor wants me to learn?</strong> If yes, it is probably fine as a study tool. If no, do not use it.</p>
       <ul class="plain">
         <li>Check the answers against your notes or textbook. AI can make mistakes.</li>
+        <li>For licensing or certification content, check the official, current standards.</li>
         <li>Check your instructor’s rules about using AI.</li>
         <li>Do not type your name, student ID, or other personal information.</li>
       </ul>
+      <p style="margin-bottom:.5rem"><strong>Do not use AI:</strong></p>
+      <ul class="plain">
+        <li>During quizzes or exams.</li>
+        <li>To do graded work that you will turn in as your own.</li>
+        <li>To make citations or sources. AI often invents ones that do not exist.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">If your instructor asks you to say when you used AI</h3>
+      <p class="hint">Some instructors want a short note. Fill in the brackets with your own words.</p>
+      <p id="aiNote" style="margin-bottom:.75rem"></p>
+      <button type="button" class="btn2" id="noteBtn">Copy this note</button>
     </div>
   </section>
 </main>
@@ -153,23 +174,38 @@ function el(tag, attrs, kids){
   (kids||[]).forEach(function(c){ e.appendChild(c); });
   return e;
 }
-var NOTES = "[paste your notes here]";
 var TYPES = {
-  cards:{label:"Flashcards from my notes", fields:[["course","text","Class name","Example: Biology 101"],["topic","text","Topic (optional)","Example: the parts of a cell"],["count","select","How many flashcards?","",["5","10","15","20"],"10"]]},
-  quiz:{label:"A practice quiz, one question at a time", fields:[["course","text","Class name","Example: Introduction to Business"],["topic","text","Topic (optional)","Example: types of business ownership"]]},
-  explain:{label:"An explanation in plain words", fields:[["concept","text","What idea are you stuck on?","Example: how interest rates affect loans"],["course","text","Class name (optional)","Example: Personal Finance"]]},
-  missed:{label:"A check of what I missed", fields:[["topic","text","Topic you studied","Example: the stages of the water cycle"],["course","text","Class name (optional)","Example: Earth Science"]]},
-  plan:{label:"A study schedule for a test", fields:[["course","text","Subject","Example: Medical Terminology"],["date","text","Test date","Example: December 12"],["days","select","How many days a week can you study?","",["1","2","3","4","5","6","7"],"3"],["mins","select","About how many minutes each time?","",["15","20","30","45","60"],"30"],["topics","textarea","Topics on the test","Example: prefixes, suffixes, body systems"]]},
-  problems:{label:"Practice problems, one at a time", fields:[["course","text","Class name","Example: Math 105"],["topic","text","Topic (optional)","Example: solving equations"],["count","select","How many problems?","",["3","5","8","10"],"5"]]}
+  explain:{label:"An explanation in plain words", use:"understand an idea", fields:[["concept","text","What idea are you stuck on?","Example: how interest rates affect loans"],["course","text","Class name (optional)","Example: Personal Finance"]],
+    follow:["Give me one more example.","What mistakes do students often make with this idea?","Now quiz me on it, one question at a time."]},
+  stuck:{label:"Help me get unstuck on my work", use:"understand an idea I was stuck on", fields:[["course","text","Class name","Example: Restaurant Management"],["task","textarea","What are you working on?","Example: an assignment on figuring out food cost percentage"],["tried","textarea","What have you tried, or what answer did you get?","Example: I got 34.2 percent, but I am not sure it is right"],["confused","textarea","Where are you stuck or confused?","Example: I do not know what the number tells me about the menu item"],["want","text","What do you most want to understand? (optional)","Example: how a manager decides what to do about it"]],
+    follow:["Based on that, what is one thing I could try next? Do not do it for me.","Why does that work?","Here is my next try: [type what you tried]. Tell me where my thinking is right or wrong."]},
+  chart:{label:"A chart of things I mix up", use:"compare ideas I was mixing up", fields:[["course","text","Class name","Example: Cosmetology"],["things","textarea","What things do you keep mixing up?","Example: sanitation and disinfection"],["features","text","What do you want to compare? (optional)","Example: when each is used and how long it takes"]],
+    follow:["Now quiz me on this chart. Give me one situation at a time, and ask which one applies. Tell me if I am right and explain why.","Which parts of this chart do students mix up most often?"]},
+  cards:{label:"Flashcards from my notes", use:"make flashcards to study", fields:[["course","text","Class name","Example: Biology 101"],["topic","text","Topic (optional)","Example: the parts of a cell"],["count","select","How many flashcards?","",["5","10","15","20"],"10"]],
+    follow:["Now quiz me on these flashcards, one at a time.","Which three cards are the hardest ideas? Explain them in a different way."]},
+  quiz:{label:"A practice quiz, one question at a time", use:"quiz myself", fields:[["course","text","Class name","Example: Introduction to Business"],["topic","text","Topic (optional)","Example: types of business ownership"]],
+    follow:["I got some wrong. Explain those again in simpler words, then quiz me on only those.","Make the next questions a little harder."]},
+  problems:{label:"Practice problems, one at a time", use:"practice problems", fields:[["course","text","Class name","Example: Math 105"],["topic","text","Topic (optional)","Example: solving equations"],["count","select","How many problems?","",["3","5","8","10"],"5"]],
+    follow:["I am stuck on this problem. Give me a hint, but not the answer.","Give me one more problem like the one I missed."]},
+  missed:{label:"A check of what I missed", use:"find what I missed while studying", fields:[["topic","text","Topic you studied","Example: the stages of the water cycle"],["course","text","Class name (optional)","Example: Earth Science"]],
+    follow:["Quiz me on the parts I missed.","Explain the part I got wrong in a different way."]},
+  plan:{label:"A study schedule for a test", use:"plan my studying", fields:[["course","text","Subject","Example: Medical Terminology"],["date","text","Test date","Example: December 12"],["days","select","How many days a week can you study?","",["1","2","3","4","5","6","7"],"3"],["mins","select","About how many minutes each time?","",["15","20","30","45","60"],"30"],["topics","textarea","Topics on the test","Example: prefixes, suffixes, body systems"]],
+    follow:["Turn this into a day-by-day checklist.","Move the hardest topic to the first days, and add a review day before the test."]}
 };
-var order = ["cards","quiz","explain","missed","plan","problems"];
-var tb = $("types");
-order.forEach(function(k,i){
-  var id = "t"+i;
-  var lab = el("label",{"class":"opt","for":id});
-  lab.appendChild(el("input",{type:"radio",name:"type",id:id,value:k}));
-  lab.appendChild(el("span",{text:TYPES[k].label}));
-  tb.appendChild(lab);
+var GROUPS = [["Understand something",["explain","stuck","chart"]],["Practice and review",["cards","quiz","problems","missed"]],["Plan my studying",["plan"]]];
+var tb = $("types"), n = 0;
+GROUPS.forEach(function(g,gi){
+  var gid = "g"+gi, grp = el("div",{role:"group","aria-labelledby":gid,style:"margin-bottom:1rem"});
+  grp.appendChild(el("h3",{id:gid,style:"margin:.25rem 0 .25rem;font-size:1.0625rem",text:g[0]}));
+  var opts = el("div",{"class":"opts"});
+  g[1].forEach(function(k){
+    var id = "t"+(n++);
+    var lab = el("label",{"class":"opt","for":id});
+    lab.appendChild(el("input",{type:"radio",name:"type",id:id,value:k}));
+    lab.appendChild(el("span",{text:TYPES[k].label}));
+    opts.appendChild(lab);
+  });
+  grp.appendChild(opts); tb.appendChild(grp);
 });
 function renderFields(k){
   var f = $("fields"); f.innerHTML = "";
@@ -190,6 +226,7 @@ function renderFields(k){
 }
 tb.addEventListener("change", function(e){ if(e.target && e.target.name==="type"){ $("err").className="err"; $("err").textContent=""; renderFields(e.target.value); } });
 function v(id){ var x=$("f_"+id); return x ? (x.value||"").trim() : ""; }
+var NOTES = "[paste your notes here]";
 function build(k){
   var c = v("course"), t = v("topic");
   var cs = c || "[class name]", ctx = "I am a college student studying "+cs+"."+(t ? " The topic is "+t+"." : "");
@@ -198,9 +235,17 @@ function build(k){
   if(k==="explain") return "Explain "+(v("concept")||"[the idea you are stuck on]")+(c ? " for my "+c+" class" : "")+" in plain, simple language, as if I am new to it. Give one everyday example. Then ask me one question to check that I understood.";
   if(k==="missed") return "I studied "+(t||"[topic]")+(c ? " for my "+c+" class" : "")+". Here is everything I can remember without looking at my notes: [type what you remember here].\n\nCompare it with my notes below. Tell me what I missed or got wrong, and quiz me on those parts.\n\nNotes: "+NOTES;
   if(k==="plan") return "I have a test on "+cs.replace("[class name]","[subject]")+" on "+(v("date")||"[date]")+". I can study "+v("days")+" "+(v("days")==="1"?"day":"days")+" a week for about "+v("mins")+" minutes each time. Make a schedule that spreads the topics across those days and returns to earlier topics so I do not forget them. The topics are: "+(v("topics")||"[list your topics]")+".";
+  if(k==="stuck") return "I am a college student studying "+cs+". I am working on "+(v("task")||"[what you are working on]")+".\n\nWhat I have tried, or the answer I got: "+(v("tried")||"[what you tried]")+"\n\nWhere I am stuck or confused: "+(v("confused")||"[where you are stuck]")+"\n\nPlease explain the idea and the reasoning behind it so that I can do the work myself. Do not complete the assignment for me."+(v("want") ? " I especially want to understand "+v("want")+"." : "")+" After you explain, ask me one question to check that I understood.";
+  if(k==="chart") return "I am a college student studying "+cs+". I keep mixing up "+(v("things")||"[the things you mix up]")+". Make a short comparison chart (a table) showing how they are different and how they are alike"+(v("features") ? ", including "+v("features") : "")+". At the end, list anything I should double-check against my class materials or the official standards for my program.";
   return ctx+" Give me "+v("count")+" practice problems like the examples below, one at a time, from easiest to hardest. Do not show the answer until I try. Then check my work step by step and tell me where I went wrong.\n\nExamples: [paste an example problem here]";
 }
-var cur = "";
+function copyText(t, ta){
+  function fb(){ if(ta){ ta.focus(); ta.select(); } $("copyMsg").textContent = "Copying did not work in this browser. Select the text and press Ctrl+C (Windows) or Cmd+C (Mac) to copy it."; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ $("copyMsg").textContent = "Copied. Now paste it into your AI assistant or your document."; }, fb);
+  } else { fb(); }
+}
+var cur = "", noteText = "";
 $("makeBtn").addEventListener("click", function(){
   var sel = document.querySelector('input[name="type"]:checked');
   var er = $("err");
@@ -208,18 +253,24 @@ $("makeBtn").addEventListener("click", function(){
   er.className="err"; er.textContent="";
   cur = build(sel.value);
   $("promptTa").value = cur; $("printBox").textContent = cur;
+  var fu = $("followups"); fu.innerHTML = "";
+  TYPES[sel.value].follow.forEach(function(t,i){
+    var li = el("li",{style:"margin:0 0 1rem"});
+    li.appendChild(el("p",{style:"margin:0 0 .4rem",text:t}));
+    var b = el("button",{type:"button","class":"btn2","aria-label":"Copy follow-up "+(i+1),text:"Copy"});
+    b.addEventListener("click", function(){ copyText(t); });
+    li.appendChild(b); fu.appendChild(li);
+  });
+  noteText = "I used [AI tool name] to help me "+TYPES[sel.value].use+". I verified the information and confirmed my understanding.";
+  $("aiNote").textContent = noteText;
   $("copyMsg").textContent = "";
   $("build").hidden = true; $("result").hidden = false;
   $("resultH").focus(); window.scrollTo(0,0);
 });
 $("backBtn").addEventListener("click", function(){ $("result").hidden = true; $("build").hidden = false; $("buildH").focus(); window.scrollTo(0,0); });
 $("printBtn").addEventListener("click", function(){ window.print(); });
-$("copyBtn").addEventListener("click", function(){
-  function fb(){ var ta=$("promptTa"); ta.focus(); ta.select(); $("copyMsg").textContent = "Copying did not work in this browser. The prompt is selected above, so press Ctrl+C (Windows) or Cmd+C (Mac) to copy it."; }
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(cur).then(function(){ $("copyMsg").textContent = "Your prompt was copied. Now paste it into your AI assistant."; }, fb);
-  } else { fb(); }
-});
+$("copyBtn").addEventListener("click", function(){ copyText(cur, $("promptTa")); });
+$("noteBtn").addEventListener("click", function(){ copyText(noteText); });
 })();
 </script>
 </body>
