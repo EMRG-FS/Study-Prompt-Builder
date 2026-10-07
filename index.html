@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Prompt Builder</title>
+<meta name="description" content="Build a ready-to-copy request for an AI assistant that makes flashcards, practice questions, or a study schedule from your own class notes.">
+<style>
+:root{--forest:#013220;--gold:#C6A15B;--warm:#7B7B7B;--ivory:#F8F5E9;--char:#333333;--sage:#A3B18A;--coral:#D97A6A;--sky:#89B6A5;--sage-tint:#E4EADA;--coral-tint:#F7E0DB;--sky-tint:#DCEBE5;--white:#FFFFFF}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:100%}
+body{margin:0;background:var(--ivory);color:var(--char);font-family:Verdana,"DejaVu Sans",sans-serif;font-size:1.125rem;line-height:1.6}
+.skip{position:absolute;left:-999px;top:0;background:var(--white);color:var(--forest);padding:.6rem 1rem;z-index:10;font-weight:bold}
+.skip:focus{left:12px;top:8px}
+header.band{background:var(--forest);color:var(--ivory);padding:1.5rem 1rem 1.75rem;border-bottom:5px solid var(--gold)}
+.wrap{max-width:52rem;margin:0 auto}
+.kicker{color:var(--gold);font-weight:bold;font-size:1rem;letter-spacing:.04em;margin:0 0 .4rem}
+h1{font-size:1.9rem;line-height:1.25;margin:0 0 .5rem}
+header p{margin:0;font-size:1.125rem}
+main{max-width:52rem;margin:0 auto;padding:1.5rem 1rem 3rem}
+h2{color:var(--forest);font-size:1.5rem;line-height:1.3;margin:0 0 .75rem}
+h3{color:var(--forest);font-size:1.25rem;line-height:1.3;margin:1.25rem 0 .5rem}
+h2:focus{outline:none}
+p{margin:0 0 1rem}
+.card{background:var(--white);border:2px solid var(--sage);border-radius:10px;padding:1.25rem;margin:0 0 1.25rem}
+.note{background:var(--sky-tint);border-left:6px solid var(--forest);padding:.75rem 1rem;border-radius:0 8px 8px 0;margin:0 0 1.25rem}
+.warn{background:var(--coral-tint);border-left:6px solid var(--coral);padding:.75rem 1rem;border-radius:0 8px 8px 0;margin:0 0 1rem;color:#5a1f14}
+fieldset{border:2px solid var(--warm);border-radius:8px;margin:0 0 1rem;padding:.75rem 1rem 1rem;background:var(--white)}
+legend{font-weight:bold;color:var(--forest);padding:0 .4rem;font-size:1.125rem}
+.opts{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:.5rem}
+.opt{display:flex;align-items:center;gap:.5rem;border:2px solid var(--warm);border-radius:8px;padding:.5rem .75rem;min-height:48px;background:var(--white);cursor:pointer;font-size:1rem}
+.opt input{width:1.25rem;height:1.25rem;margin:0;accent-color:var(--forest)}
+.opt:has(input:checked){background:var(--sage-tint);border-color:var(--forest);font-weight:bold}
+label.lbl{display:block;font-weight:bold;color:var(--forest);margin:0 0 .35rem}
+.hint{font-size:1rem;margin:0 0 .5rem;color:#4a4a4a}
+input[type=text],input[type=date],textarea,select{width:100%;font:inherit;font-size:1rem;color:var(--char);background:var(--white);border:2px solid var(--warm);border-radius:8px;padding:.6rem .7rem;min-height:48px}
+textarea{min-height:6.5rem;resize:vertical}
+button{font:inherit;font-size:1rem;cursor:pointer;min-height:48px;border-radius:8px;padding:.6rem 1.25rem;font-weight:bold}
+.btn{background:var(--forest);color:var(--ivory);border:2px solid var(--forest)}
+.btn:hover{background:#024a2f}
+.btn2{background:var(--white);color:var(--forest);border:2px solid var(--forest)}
+.btn2:hover{background:var(--sage-tint)}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1rem}
+:focus-visible{outline:3px solid var(--forest);outline-offset:3px}
+.btn:focus-visible{outline-color:var(--forest);box-shadow:0 0 0 3px var(--ivory),0 0 0 6px var(--forest)}
+.progress{font-size:1rem;font-weight:bold;color:var(--forest);margin:0 0 .5rem}
+.bar{height:12px;background:var(--sage-tint);border:2px solid var(--sage);border-radius:8px;overflow:hidden;margin:0 0 1.25rem}
+.bar span{display:block;height:100%;background:var(--forest)}
+.err{margin:0 0 1rem}
+.err:empty{display:none}
+.badge{display:inline-block;background:var(--forest);color:var(--ivory);border-radius:6px;padding:.1rem .6rem;font-size:1rem;font-weight:bold;margin-left:.5rem}
+.badge.alt{background:var(--sage-tint);color:var(--forest);border:2px solid var(--forest)}
+ul.plain{margin:0 0 1rem;padding-left:1.4rem}
+ul.plain li{margin:.25rem 0}
+.score{font-weight:bold}
+.fallback{width:100%;min-height:10rem;font-family:Verdana,"DejaVu Sans",sans-serif}
+footer{max-width:52rem;margin:0 auto;padding:1rem 1rem 2.5rem;border-top:2px solid var(--sage);font-size:1rem}
+footer p{margin:0 0 .5rem}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{border:2px solid var(--warm);padding:.5rem .6rem;text-align:left;vertical-align:top;background:var(--white)}
+th{background:var(--forest);color:var(--ivory)}
+.printonly{display:none}
+@media (max-width:520px){h1{font-size:1.6rem}.opts{flex-direction:column}.opt{width:100%}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media (forced-colors:active){.opt:has(input:checked){outline:3px solid Highlight}}
+@media print{
+  body{background:#fff;color:#000;font-size:12pt}
+  header.band{background:#fff;color:#000;border-bottom:2px solid #000;padding:0 0 .5rem}
+  .kicker{color:#000}
+  .noprint,.skip,.row,.progress,.bar{display:none!important}
+  .card{border:1px solid #000;break-inside:avoid}
+  th{background:#fff;color:#000}
+  .printonly{display:block}
+  a{color:#000}
+}
+
+.promptTa{min-height:14rem;font-family:Verdana,"DejaVu Sans",sans-serif;line-height:1.5}
+.fieldwrap{margin-bottom:1rem}
+@media print{.promptTa{display:none}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header class="band">
+  <div class="wrap">
+    <h1>Study Prompt Builder</h1>
+    <p>Build a ready-to-copy request for an AI assistant that makes study tools from your own class notes.</p>
+  </div>
+</header>
+<main id="main" tabindex="-1">
+  <noscript><div class="warn">This activity needs JavaScript. Please turn it on, or use the guide Using an AI Assistant as a Study Partner, which has the same prompts to copy.</div></noscript>
+
+  <section id="build" aria-labelledby="buildH">
+    <h2 id="buildH" tabindex="-1">Build your prompt</h2>
+    <div class="note"><p>You choose what you want to make and fill in a few details. The tool writes the prompt. You then paste it into the AI assistant you use, such as ChatGPT, Gemini, Microsoft Copilot, or Claude. Nothing you type here is saved or sent anywhere.</p></div>
+    <div id="err" class="err" role="alert"></div>
+    <form id="form" novalidate>
+      <fieldset>
+        <legend>What do you want to make?</legend>
+        <div class="opts" id="types"></div>
+      </fieldset>
+      <div class="card" id="detailsCard" hidden>
+        <h3 style="margin-top:0">A few details</h3>
+        <p class="hint">You can leave any box empty. The prompt will show a [bracket] you can fill in later.</p>
+        <div id="fields"></div>
+      </div>
+      <div class="row"><button type="button" class="btn" id="makeBtn">Make my prompt</button></div>
+    </form>
+  </section>
+
+  <section id="result" hidden aria-labelledby="resultH">
+    <h2 id="resultH" tabindex="-1">Your prompt</h2>
+    <label class="lbl" for="promptTa">Copy this prompt. Replace anything in [square brackets] before you send it.</label>
+    <textarea id="promptTa" class="promptTa" readonly></textarea>
+    <div class="printonly" id="printBox" style="white-space:pre-wrap"></div>
+    <div class="row">
+      <button type="button" class="btn" id="copyBtn">Copy my prompt</button>
+      <button type="button" class="btn2" id="printBtn">Print my prompt</button>
+      <button type="button" class="btn2" id="backBtn">Go back and change it</button>
+    </div>
+    <p id="copyMsg" role="status" class="hint" style="margin-top:.75rem"></p>
+    <p class="hint">To print from your keyboard, press Ctrl+P (Windows) or Cmd+P (Mac).</p>
+    <div class="card">
+      <h3 style="margin-top:0">What to do next</h3>
+      <ol class="plain">
+        <li>Open the AI assistant you use.</li>
+        <li>Paste your prompt into the message box.</li>
+        <li>Replace the words in [square brackets]. Paste your own class notes where the prompt asks for them, or attach your notes if your assistant lets you.</li>
+        <li>Send it, then answer the questions without looking at your notes.</li>
+      </ol>
+      <h3>Before you send</h3>
+      <ul class="plain">
+        <li>Check the answers against your notes or textbook. AI can make mistakes.</li>
+        <li>Check your instructor’s rules about using AI.</li>
+        <li>Do not type your name, student ID, or other personal information.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<footer>
+  <p>Developed by Educational Management Resources Group (EMRG).</p>
+</footer>
+
+<script>
+(function(){
+"use strict";
+var $ = function(id){return document.getElementById(id);};
+function el(tag, attrs, kids){
+  var e = document.createElement(tag);
+  Object.keys(attrs||{}).forEach(function(k){ if(k==="text") e.textContent=attrs[k]; else e.setAttribute(k, attrs[k]); });
+  (kids||[]).forEach(function(c){ e.appendChild(c); });
+  return e;
+}
+var NOTES = "[paste your notes here]";
+var TYPES = {
+  cards:{label:"Flashcards from my notes", fields:[["course","text","Class name","Example: Biology 101"],["topic","text","Topic (optional)","Example: the parts of a cell"],["count","select","How many flashcards?","",["5","10","15","20"],"10"]]},
+  quiz:{label:"A practice quiz, one question at a time", fields:[["course","text","Class name","Example: Introduction to Business"],["topic","text","Topic (optional)","Example: types of business ownership"]]},
+  explain:{label:"An explanation in plain words", fields:[["concept","text","What idea are you stuck on?","Example: how interest rates affect loans"],["course","text","Class name (optional)","Example: Personal Finance"]]},
+  missed:{label:"A check of what I missed", fields:[["topic","text","Topic you studied","Example: the stages of the water cycle"],["course","text","Class name (optional)","Example: Earth Science"]]},
+  plan:{label:"A study schedule for a test", fields:[["course","text","Subject","Example: Medical Terminology"],["date","text","Test date","Example: December 12"],["days","select","How many days a week can you study?","",["1","2","3","4","5","6","7"],"3"],["mins","select","About how many minutes each time?","",["15","20","30","45","60"],"30"],["topics","textarea","Topics on the test","Example: prefixes, suffixes, body systems"]]},
+  problems:{label:"Practice problems, one at a time", fields:[["course","text","Class name","Example: Math 105"],["topic","text","Topic (optional)","Example: solving equations"],["count","select","How many problems?","",["3","5","8","10"],"5"]]}
+};
+var order = ["cards","quiz","explain","missed","plan","problems"];
+var tb = $("types");
+order.forEach(function(k,i){
+  var id = "t"+i;
+  var lab = el("label",{"class":"opt","for":id});
+  lab.appendChild(el("input",{type:"radio",name:"type",id:id,value:k}));
+  lab.appendChild(el("span",{text:TYPES[k].label}));
+  tb.appendChild(lab);
+});
+function renderFields(k){
+  var f = $("fields"); f.innerHTML = "";
+  TYPES[k].fields.forEach(function(d){
+    var id = "f_"+d[0], w = el("div",{"class":"fieldwrap"});
+    w.appendChild(el("label",{"class":"lbl","for":id,text:d[2]}));
+    if(d[3]) w.appendChild(el("p",{"class":"hint",id:id+"h",text:d[3]}));
+    var inp;
+    if(d[1]==="select"){
+      inp = el("select",{id:id});
+      d[4].forEach(function(o){ var op = el("option",{value:o,text:o}); if(o===d[5]) op.setAttribute("selected","selected"); inp.appendChild(op); });
+    } else if(d[1]==="textarea"){ inp = el("textarea",{id:id,style:"min-height:4.5rem"}); }
+    else { inp = el("input",{type:"text",id:id,autocomplete:"off"}); }
+    if(d[3]) inp.setAttribute("aria-describedby", id+"h");
+    w.appendChild(inp); f.appendChild(w);
+  });
+  $("detailsCard").hidden = false;
+}
+tb.addEventListener("change", function(e){ if(e.target && e.target.name==="type"){ $("err").className="err"; $("err").textContent=""; renderFields(e.target.value); } });
+function v(id){ var x=$("f_"+id); return x ? (x.value||"").trim() : ""; }
+function build(k){
+  var c = v("course"), t = v("topic");
+  var cs = c || "[class name]", ctx = "I am a college student studying "+cs+"."+(t ? " The topic is "+t+"." : "");
+  if(k==="cards") return ctx+" Make "+v("count")+" flashcards from the notes below. Put the question on one line and the answer on the next line. Use only the information in my notes, and do not add facts that are not in them.\n\nNotes: "+NOTES;
+  if(k==="quiz") return ctx+" Quiz me on the notes below, one question at a time. Wait for my answer before you tell me if it is right. If I am wrong, explain the correct answer in simple words and ask me a similar question again later. Start with easy questions and make them harder as I do well.\n\nNotes: "+NOTES;
+  if(k==="explain") return "Explain "+(v("concept")||"[the idea you are stuck on]")+(c ? " for my "+c+" class" : "")+" in plain, simple language, as if I am new to it. Give one everyday example. Then ask me one question to check that I understood.";
+  if(k==="missed") return "I studied "+(t||"[topic]")+(c ? " for my "+c+" class" : "")+". Here is everything I can remember without looking at my notes: [type what you remember here].\n\nCompare it with my notes below. Tell me what I missed or got wrong, and quiz me on those parts.\n\nNotes: "+NOTES;
+  if(k==="plan") return "I have a test on "+cs.replace("[class name]","[subject]")+" on "+(v("date")||"[date]")+". I can study "+v("days")+" "+(v("days")==="1"?"day":"days")+" a week for about "+v("mins")+" minutes each time. Make a schedule that spreads the topics across those days and returns to earlier topics so I do not forget them. The topics are: "+(v("topics")||"[list your topics]")+".";
+  return ctx+" Give me "+v("count")+" practice problems like the examples below, one at a time, from easiest to hardest. Do not show the answer until I try. Then check my work step by step and tell me where I went wrong.\n\nExamples: [paste an example problem here]";
+}
+var cur = "";
+$("makeBtn").addEventListener("click", function(){
+  var sel = document.querySelector('input[name="type"]:checked');
+  var er = $("err");
+  if(!sel){ er.className="err warn"; er.textContent="Please choose what you want to make."; document.getElementById("t0").focus(); return; }
+  er.className="err"; er.textContent="";
+  cur = build(sel.value);
+  $("promptTa").value = cur; $("printBox").textContent = cur;
+  $("copyMsg").textContent = "";
+  $("build").hidden = true; $("result").hidden = false;
+  $("resultH").focus(); window.scrollTo(0,0);
+});
+$("backBtn").addEventListener("click", function(){ $("result").hidden = true; $("build").hidden = false; $("buildH").focus(); window.scrollTo(0,0); });
+$("printBtn").addEventListener("click", function(){ window.print(); });
+$("copyBtn").addEventListener("click", function(){
+  function fb(){ var ta=$("promptTa"); ta.focus(); ta.select(); $("copyMsg").textContent = "Copying did not work in this browser. The prompt is selected above, so press Ctrl+C (Windows) or Cmd+C (Mac) to copy it."; }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(cur).then(function(){ $("copyMsg").textContent = "Your prompt was copied. Now paste it into your AI assistant."; }, fb);
+  } else { fb(); }
+});
+})();
+</script>
+</body>
+</html>
